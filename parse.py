@@ -8,12 +8,12 @@ import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 
-def colorbar_index(ncolors, cmap):
+def colorbar_index(ncolors, cmap, **kwargs):
     cmap = cmap_discretize(cmap, ncolors)
     mappable = cm.ScalarMappable(cmap=cmap)
     mappable.set_array([])
     mappable.set_clim(-0.5, ncolors+0.5)
-    colorbar = pl.colorbar(mappable)
+    colorbar = pl.colorbar(mappable, **kwargs)
     colorbar.set_ticks(np.linspace(0, ncolors, ncolors))
     colorbar.set_ticklabels(range(ncolors))
 
@@ -115,13 +115,27 @@ for f, prefix in zip(files, prefixes):
     z = towerInfo[:,2]
     sizes = towerInfo[:,4]
     sizes /= np.min(sizes)
+    if prefix == 'G':
+        sizes *= 4
+    gridSpacing = 0.2
+    if prefix == 'J':
+        gridSpacing = 0.1
     N = len(set(z))
 
     fig, ax = pl.subplots(figsize=(16, 16))
-    sc = ax.scatter(x, y, c=z, cmap=pl.cm.jet, marker='s', s=75*sizes, linewidth='1', edgecolor='white', alpha=0.25)
+    sc = ax.scatter(x, y, c=z, cmap=pl.cm.jet, marker='s', s=50*sizes, linewidth='1', edgecolor='white', alpha=0.25)
+    cbaxes = fig.add_axes([0.1, 0.8, 0.8, 0.03])
+    colorbar_index(ncolors=N, cmap=pl.cm.jet, cax=cbaxes, orientation='horizontal')
+
     ax.set_xlim((-5, 5))
     ax.set_ylim((0, 6.4))
-    colorbar_index(ncolors=N, cmap=pl.cm.jet)
+    ax.set_xticks(np.arange(-5, 5, gridSpacing), minor=True)
+    ax.set_yticks(np.arange(0, 6.4, gridSpacing), minor=True)
+    ax.grid(True, which='both', linestyle='--')
+    ax.grid(which='minor', alpha=0.2)
+    ax.grid(which='major', alpha=0.5)
+
+    ax.set_aspect('equal')
 
     fig.savefig('{0:s}Towers.pdf'.format(prefix), dpi=90, bbox_inches='tight')
 
