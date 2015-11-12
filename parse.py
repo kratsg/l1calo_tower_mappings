@@ -2,7 +2,7 @@ import xmltodict
 import numpy as np
 
 import matplotlib
-matplotlib.use('pdf')
+matplotlib.use('Agg')
 import matplotlib.pyplot as pl
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
@@ -137,11 +137,12 @@ for f, prefix in zip(files, prefixes):
         rect = pl.Rectangle( (xx, yy), xx_size, yy_size, facecolor=c, edgecolor='white', alpha=0.5)
         ax.add_patch(rect)
 
-    cbaxes = fig.add_axes([0.1, 0.8, 0.8, 0.03])
+    cbaxes = fig.add_axes([0.13, 0.8, 0.77, 0.03])
 
     cbar = matplotlib.colorbar.ColorbarBase(cbaxes, cmap=cmap, boundaries=bounds, norm=norm, orientation='horizontal')
     cbar.set_ticks(np.linspace(0, N, N+1)+0.5)
     cbar.set_ticklabels(range(N))
+    cbaxes.set_xlabel('region ID')
 
     ax.set_xlim((-5, 5))
     ax.set_ylim((0, 6.5))
@@ -150,6 +151,8 @@ for f, prefix in zip(files, prefixes):
     ax.grid(True, which='both', linestyle='--')
     ax.grid(which='minor', alpha=0.2)
     ax.grid(which='major', alpha=0.5)
+    ax.set_xlabel(r'$\eta$')
+    ax.set_ylabel(r'$\phi$')
 
     ax.set_aspect('equal')
 
