@@ -131,10 +131,13 @@ for f, prefix in zip(files, prefixes):
     cmap = mcolors.ListedColormap(colors.mpl_colors)
     bounds = np.arange(N+1)
     norm = mcolors.BoundaryNorm(bounds, cmap.N)
+    hatches = ['/', '\\', '//', '\\\\', '///', '\\\\\\', '////', '\\\\\\\\', '/////', '\\\\\\\\\\']
 
     fig, ax = pl.subplots(figsize=(16, 16))
     for xx, yy, zz, xx_size, yy_size, c in zip(x, y, z, x_sizes, y_sizes, cmap(norm(z))):
-        rect = pl.Rectangle( (xx, yy), xx_size, yy_size, facecolor=c, edgecolor='white', alpha=0.5)
+        # lower zorder is drawn first
+        zorder = z.max() - zz
+        rect = pl.Rectangle( (xx, yy), xx_size, yy_size, facecolor=c, edgecolor='white', alpha=0.5, zorder=zorder, hatch=hatches[norm(zz)])
         ax.add_patch(rect)
 
     cbaxes = fig.add_axes([0.13, 0.8, 0.77, 0.03])
