@@ -7,9 +7,10 @@ import matplotlib.pyplot as pl
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
+from palettable import colorbrewer
 
 def colorbar_index(ncolors, cmap, **kwargs):
-    cmap = cmap_discretize(cmap, ncolors)
+    #cmap = cmap_discretize(cmap, ncolors)
     mappable = cm.ScalarMappable(cmap=cmap)
     mappable.set_array([])
     mappable.set_clim(-0.5, ncolors+0.5)
@@ -101,10 +102,14 @@ for f, prefix in zip(files, prefixes):
 
         eta = indexToCoordinates(ieta, etaStart, etaStep)
         phi = indexToCoordinates(iphi, phiStart, phiStep)
-        eta += float(etaStep)/2.
-        phi += float(phiStep)/2.
-
+        # rectangles are drawn from bottom left (x,y)
+        # negative eta needs to be shifted to account for the flipping
+        #       if you take a piece of paper and draw it out, you realize
+        #       we have to shift it to the right by etaStep (so it flips correctly and is
+        #       drawn correctly from bottom left)
+        eta += ((-np.sign(int(pos_neg_eta)) + 1)/2.)*float(etaStep)
         eta *= np.sign(int(pos_neg_eta))
+
         towerInfo.append((eta, phi, int(regionIndex), int(sampling), float(etaStep), float(phiStep)))
 
     towerInfo = np.array(towerInfo)
@@ -113,22 +118,33 @@ for f, prefix in zip(files, prefixes):
     x = towerInfo[:,0]
     y = towerInfo[:,1]
     z = towerInfo[:,2]
-    sizes = towerInfo[:,4]
-    sizes /= np.min(sizes)
-    if prefix == 'G':
-        sizes *= 4
+    x_sizes = towerInfo[:,4]
+    y_sizes = towerInfo[:,5]
+
     gridSpacing = 0.2
     if prefix == 'J':
         gridSpacing = 0.1
     N = len(set(z))
 
+    zvals = list(set(z))
+    colors = colorbrewer.qualitative.Paired_10
+    cmap = mcolors.ListedColormap(colors.mpl_colors)
+    bounds = np.arange(N+1)
+    norm = mcolors.BoundaryNorm(bounds, cmap.N)
+
     fig, ax = pl.subplots(figsize=(16, 16))
-    sc = ax.scatter(x, y, c=z, cmap=pl.cm.jet, marker='s', s=50*sizes, linewidth='1', edgecolor='white', alpha=0.25)
+    for xx, yy, zz, xx_size, yy_size, c in zip(x, y, z, x_sizes, y_sizes, cmap(norm(z))):
+        rect = pl.Rectangle( (xx, yy), xx_size, yy_size, facecolor=c, edgecolor='white', alpha=0.5)
+        ax.add_patch(rect)
+
     cbaxes = fig.add_axes([0.1, 0.8, 0.8, 0.03])
-    colorbar_index(ncolors=N, cmap=pl.cm.jet, cax=cbaxes, orientation='horizontal')
+
+    cbar = matplotlib.colorbar.ColorbarBase(cbaxes, cmap=cmap, boundaries=bounds, norm=norm, orientation='horizontal')
+    cbar.set_ticks(np.linspace(0, N, N+1)+0.5)
+    cbar.set_ticklabels(range(N))
 
     ax.set_xlim((-5, 5))
-    ax.set_ylim((0, 6.4))
+    ax.set_ylim((0, 6.5))
     ax.set_xticks(np.arange(-5, 5, gridSpacing), minor=True)
     ax.set_yticks(np.arange(0, 6.4, gridSpacing), minor=True)
     ax.grid(True, which='both', linestyle='--')
